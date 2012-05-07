@@ -732,7 +732,10 @@
 				collection = new this.collectionType( [], this._getCollectionOptions() );
 			}
 
-			collection.model = this.relatedModel;
+			// do not replace for cases where the model has been explicitly set
+			if (collection.model === Backbone.Model) {
+				collection.model = this.relatedModel;
+			}
 			
 			if ( this.options.collectionKey ) {
 				var key = this.options.collectionKey === true ? this.options.reverseRelation.key : this.options.collectionKey;
