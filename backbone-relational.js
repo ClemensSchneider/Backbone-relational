@@ -815,8 +815,10 @@
 			if ( this.keyContents ) {
 				var models = [];
 
+				var touchedModels = [];
 				if ( this.keyContents instanceof Backbone.Collection ) {
 					models = this.keyContents.models;
+					touchedModels = this.keyContent.toArray();
 				}
 				else {
 					// Handle cases the an API/user supplies just an Object/id instead of an Array
@@ -832,10 +834,21 @@
 								model = this.relatedModel.findOrCreate( item, { create: this.options.createModels } );
 							}
 
-							if ( model && !this.related.getByCid( model ) && !this.related.get( model ) ) {
-								models.push( model );
-							}
+							if ( model) {
+								if ( !this.related.getByCid( model ) && !this.related.get( model )) {
+									models.push( model );
+								}
+								touchedModels.push(model);
+	 						}
 						}, this );
+				}
+				
+				var collectionModels = this.related.toArray();
+				var untouchedModels = _.difference(collectionModels, touchedModels);
+				
+				if (untouchedModels.length) {
+					options = this.unsanitizeOptions(options);
+					this.related.remove(untouchedModels);
 				}
 
 				// Add all found 'models' in on go, so 'add' will only be called once (and thus 'sort', etc.)
@@ -853,13 +866,12 @@
 			options = this.sanitizeOptions( options );
 			this.keyContents = attr;
 			
-			// Notify old 'related' object of the terminated relation
-			_.each( this.getReverseRelations(), function( relation ) {
-					relation.removeRelated( this.instance, options );
-				}, this );
-			
 			// Replace 'this.related' by 'attr' if it is a Backbone.Collection
 			if ( attr instanceof Backbone.Collection ) {
+				// Notify old 'related' object of the terminated relation
+				_.each( this.getReverseRelations(), function( relation ) {
+					relation.removeRelated( this.instance, options );
+				}, this );
 				this._prepareCollection( attr );
 				this.related = attr;
 			}
@@ -868,17 +880,26 @@
 			// Otherwise, create a new collection.
 			else {
 				var coll;
+				var oldEntries = [];
 
 				if ( this.related instanceof Backbone.Collection ) {
 					coll = this.related;
-					coll.remove( coll.models );
+					oldEntries = coll.toArray();
 				}
 				else {
 					coll = this._prepareCollection();
+					// Notify old 'related' object of the terminated relation
+					_.each( this.getReverseRelations(), function( relation ) {
+						relation.removeRelated( this.instance, options );
+					}, this );
 				}
 
 				this.setRelated( coll );
 				this.findRelated( options );
+				
+				var newEntries = coll.toArray();
+				var obsoleteEntries = _.difference(oldEntries, newEntries);
+				coll.remove(obsoleteEntries);
 			}
 			
 			// Notify new 'related' object of the new relation
