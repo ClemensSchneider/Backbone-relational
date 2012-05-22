@@ -51,7 +51,7 @@ $(document).ready(function() {
 				key: 'animals',
 				relatedModel: 'Animal',
 				collectionType: 'AnimalCollection',
-				collectionOptions: function( instance ) { return { 'url':  'zoo/' + instance.cid + '/animal/' } },
+				collectionOptions: function( instance ) { return { 'url': 'zoo/' + instance.cid + '/animal/' } },
 				reverseRelation: {
 					key: 'livesIn',
 					includeInJSON: 'id'
@@ -256,10 +256,10 @@ $(document).ready(function() {
 	}
 	
 	
-	module("Backbone.Semaphore");
+	module( "Backbone.Semaphore", {} );
 	
 	
-		test("Unbounded", function() {
+		test( "Unbounded", function() {
 			expect( 10 );
 			
 			var semaphore = _.extend( {}, Backbone.Semaphore );
@@ -301,7 +301,7 @@ $(document).ready(function() {
 		});
 	
 	
-	module( "Backbone.BlockingQueue" );
+	module( "Backbone.BlockingQueue", {} );
 	
 	
 		test( "Block", function() {
@@ -433,7 +433,7 @@ $(document).ready(function() {
 			ok( Backbone.Relational.store.find( Node, 4 ) instanceof Node, "Node 4 can be found" );
 		});
 		
-		test( "Inheritance creates and uses a separate relation", function() {
+		test( "Inheritance creates and uses a separate collection", function() {
 			var whale = new Animal( { id: 1, species: 'whale' } );
 			ok( Backbone.Relational.store.find( Animal, 1 ) === whale );
 			
@@ -459,6 +459,45 @@ $(document).ready(function() {
 			
 			equal( Backbone.Relational.store._collections.length, numCollections + 2 );
 			ok( Backbone.Relational.store.find( Primate, 1 ) === gorilla );
+		});
+		
+		test( "Inheritance with `subModelTypes` uses the same collection as the model's super", function() {
+			var Mammal = Animal.extend({
+				subModelTypes: {
+					'primate': 'Primate',
+					'carnivore': 'Carnivore'
+				}
+			});
+
+			var whale = new Mammal( { id: 1, species: 'whale' } );
+
+			var numCollections = Backbone.Relational.store._collections.length;
+
+			window.Primate = Mammal.extend();
+			window.Carnivore = Mammal.extend();
+
+			var lion = new Carnivore( { id: 2, species: 'lion' } );
+			var wolf = new Carnivore( { id: 3, species: 'wolf' } );
+
+			equal( Backbone.Relational.store._collections.length, numCollections, "`_collections` should have remained the same" );
+
+			ok( Backbone.Relational.store.find( Mammal, 1 ) === whale );
+			ok( Backbone.Relational.store.find( Mammal, 2 ) === lion );
+			ok( Backbone.Relational.store.find( Mammal, 3 ) === wolf );
+			ok( Backbone.Relational.store.find( Carnivore, 1 ) !== whale );
+			ok( Backbone.Relational.store.find( Carnivore, 2 ) === lion );
+			ok( Backbone.Relational.store.find( Carnivore, 3 ) === wolf );
+
+			var gorilla = new Primate( { id: 4, species: 'gorilla' } );
+
+			equal( Backbone.Relational.store._collections.length, numCollections, "`_collections` should have remained the same" );
+
+			ok( Backbone.Relational.store.find( Animal, 4 ) !== gorilla );
+			ok( Backbone.Relational.store.find( Mammal, 4 ) === gorilla );
+			ok( Backbone.Relational.store.find( Primate, 4 ) === gorilla );
+
+			delete window.Primate;
+			delete window.Carnivore;
 		});
 		
 	
@@ -605,6 +644,188 @@ $(document).ready(function() {
 			//console.debug( json );
 			ok( json.children.length === 1 );
 		});
+
+		test( "constructor.findOrCreate", function() {
+			var personColl = Backbone.Relational.store.getCollection( person1 ),
+				origPersonCollSize = personColl.length;
+
+			// Just find an existing model
+			var person = Person.findOrCreate( person1.id );
+
+			ok( person === person1 );
+			ok( origPersonCollSize === personColl.length, "Existing person was found (none created)" );
+
+			// Update an existing model
+			person = Person.findOrCreate( { id: person1.id, name: 'dude' } );
+
+			equal( person.get( 'name' ), 'dude' );
+			equal( person1.get( 'name' ), 'dude' );
+
+			ok( origPersonCollSize === personColl.length, "Existing person was updated (none created)" );
+
+			// Look for a non-existent person; 'options.create' is false
+			person = Person.findOrCreate( { id: 5001 }, { create: false } );
+
+			ok( !person );
+			ok( origPersonCollSize === personColl.length, "No person was found (none created)" );
+
+			// Create a new model
+			person = Person.findOrCreate( { id: 5001 } );
+
+			ok( person instanceof Person );
+			ok( origPersonCollSize + 1 === personColl.length, "No person was found (1 created)" );
+		});
+
+	
+	module( "Backbone.RelationalModel inheritance (`subModelTypes`)", {} );
+
+
+		test( "Object building based on type, when using explicit collections" , function() {
+			var Mammal = Animal.extend({
+				subModelTypes: {
+					'primate': 'Primate',
+					'carnivore': 'Carnivore'
+				}
+			});
+			window.Primate = Mammal.extend();
+			window.Carnivore = Mammal.extend();
+
+			var MammalCollection = AnimalCollection.extend({
+				model: Mammal
+			});
+
+			var mammals = new MammalCollection( [
+				{ id: 5, species: 'chimp', type: 'primate' },
+				{ id: 6, species: 'panther', type: 'carnivore' }
+			]);
+
+			ok( mammals.at( 0 ) instanceof Primate );
+			ok( mammals.at( 1 ) instanceof Carnivore );
+
+			delete window.Carnivore;
+			delete window.Primate;
+		});
+
+		test( "Object building based on type, when used in relations" , function() {
+			var PetAnimal = Backbone.RelationalModel.extend({
+				subModelTypes: {
+					'cat': 'Cat',
+					'dog': 'Dog'
+				}
+			});
+			window.Dog = PetAnimal.extend();
+			window.Cat = PetAnimal.extend();
+
+			var PetPerson = Backbone.RelationalModel.extend({
+				relations: [{
+					type: Backbone.HasMany,
+					key: 'pets',
+					relatedModel: PetAnimal,
+					reverseRelation: {
+						key: 'owner'
+					}
+				}]
+			});
+
+			var petPerson = new PetPerson({
+				pets: [
+					{
+						type: 'dog',
+						name: 'Spot'
+					},
+					{
+						type: 'cat',
+						name: 'Whiskers'
+					}
+				]
+			});
+
+			ok( petPerson.get( 'pets' ).at( 0 ) instanceof Dog );
+			ok( petPerson.get( 'pets' ).at( 1 ) instanceof Cat );
+
+			petPerson.get( 'pets' ).add({
+				type: 'dog',
+				name: 'Spot II'
+			});
+			
+			ok( petPerson.get( 'pets' ).at( 2 ) instanceof Dog );
+
+			delete window.Dog;
+			delete window.Cat;
+		});
+		
+		test( "Automatic sharing of 'superModel' relations" , function() {
+			window.PetPerson = Backbone.RelationalModel.extend({});
+			window.PetAnimal = Backbone.RelationalModel.extend({
+				subModelTypes: {
+					'dog': 'Dog'
+				},
+
+				relations: [{
+					type: Backbone.HasOne,
+					key:  'owner',
+					relatedModel: PetPerson,
+					reverseRelation: {
+						type: Backbone.HasMany,
+						key: 'pets'
+					}
+				}]
+			});
+			
+			window.Flea = Backbone.RelationalModel.extend({});
+			window.Dog = PetAnimal.extend({
+				relations: [{
+					type: Backbone.HasMany,
+					key:	'fleas',
+					relatedModel: Flea,
+					reverseRelation: {
+						key: 'host'
+					}
+				}]
+			});
+			
+			var dog = new Dog({
+				name: 'Spot'
+			});
+			
+			var person = new PetPerson({
+				pets: [ dog ]
+			});
+
+			equal( dog.get( 'owner' ), person, "Dog has a working owner relation." );
+
+			var flea = new Flea({
+				host: dog
+			});
+			
+			equal( dog.get( 'fleas' ).at( 0 ), flea, "Dog has a working fleas relation." );
+
+			delete window.PetPerson;
+			delete window.PetAnimal;
+			delete window.Flea;
+			delete window.Dog;
+		});
+	
+		test( "toJSON includes the type", function() {
+			window.PetAnimal = Backbone.RelationalModel.extend({
+				subModelTypes: {
+					'dog': 'Dog'
+				}
+			});
+
+			window.Dog = PetAnimal.extend();
+			
+			var dog = new Dog({
+				name: 'Spot'
+			});
+			
+			var json = dog.toJSON();
+			
+			equal( json.type, 'dog', "The value of 'type' is the pet animal's type." );
+
+			delete window.PetAnimal;
+			delete window.Dog;
+		});
 		
 	
 	module( "Backbone.Relation options", { setup: initObjects } );
@@ -614,7 +835,7 @@ $(document).ready(function() {
 			var json = person1.toJSON();
 			equal( json.user_id, 'user-1', "The value of 'user_id' is the user's id (not an object, since 'includeInJSON' is set to the idAttribute)" );
 			ok ( json.likesALot instanceof Object, "The value of 'likesALot' is an object ('includeInJSON' is 'true')" );
-			equal(  json.likesALot.likesALot, 'person-1', "Person is serialized only once" );
+			equal( json.likesALot.likesALot, 'person-1', "Person is serialized only once" );
 			
 			json = person1.get( 'user' ).toJSON();
 			equal( json.person, 'boy', "The value of 'person' is the person's name ('includeInJSON is set to 'name')" );
@@ -1025,7 +1246,6 @@ $(document).ready(function() {
 			]);
 
 			var zoo = new Zoo( { animals: animals } );
-			console.log( zoo.get( 'animals' ), zoo.get( 'animals' ).models );
 
 			equal( zoo.get( 'animals' ), animals, "The 'animals' collection has been set as the zoo's animals" );
 			equal( zoo.get( 'animals' ).length, 2, "Two animals in 'zoo'" );
@@ -1274,7 +1494,7 @@ $(document).ready(function() {
 		test( "Setting a new collection or array of ids updates the relation", function() {
 			var zoo = new Zoo();
 
-			var visitors =  [
+			var visitors = [
 				{ name: 'Paul' }
 			];
 
@@ -1661,7 +1881,7 @@ $(document).ready(function() {
 			ok( view.get( 'properties' ).include( props ) );
 		});
 		
-		test( "Reverse relations are found for models that have not been instantiated", function() {
+		test( "Reverse relations are found for models that have not been instantiated and use .extend()", function() {
 			var View = Backbone.RelationalModel.extend({ });
 			var Property = Backbone.RelationalModel.extend({
 				relations: [{
@@ -1674,6 +1894,80 @@ $(document).ready(function() {
 					}
 				}]
 			});
+
+			var view = new View({
+				id: 1,
+				properties: [ { id: 1, key: 'width', value: '300px' } ]
+			});
+
+			ok( view.get( 'properties' ) instanceof Backbone.Collection );
+		});
+		
+		test( "Reverse relations found for models that have not been instantiated and run .setup() manually", function() {
+			// Generated from CoffeeScript code:
+			// 	 class View extends Backbone.RelationalModel
+			// 	 
+			// 	 View.setup()
+			// 	 
+			// 	 class Property extends Backbone.RelationalModel
+			// 	   relations: [
+			// 	     type: Backbone.HasOne
+			// 	     key: 'view'
+			// 	     relatedModel: View
+			// 	     reverseRelation:
+			// 	       type: Backbone.HasMany
+			// 	       key: 'properties'
+			// 	   ]
+			// 	 
+			// 	 Property.setup()
+			
+			var Property, View,
+			  __hasProp = {}.hasOwnProperty,
+			  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+
+			View = (function(_super) {
+
+			  __extends(View, _super);
+
+			  View.name = 'View';
+
+			  function View() {
+			    return View.__super__.constructor.apply(this, arguments);
+			  }
+
+			  return View;
+
+			})(Backbone.RelationalModel);
+			
+			View.setup();
+
+			Property = (function(_super) {
+
+			  __extends(Property, _super);
+
+			  Property.name = 'Property';
+
+			  function Property() {
+			    return Property.__super__.constructor.apply(this, arguments);
+			  }
+
+			  Property.prototype.relations = [
+			    {
+			      type: Backbone.HasOne,
+			      key: 'view',
+			      relatedModel: View,
+			      reverseRelation: {
+			        type: Backbone.HasMany,
+			        key: 'properties'
+			      }
+			    }
+			  ];
+
+			  return Property;
+
+			})(Backbone.RelationalModel);
+			
+			Property.setup();
 
 			var view = new View({
 				id: 1,
