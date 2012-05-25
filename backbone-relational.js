@@ -1152,9 +1152,10 @@
 		 * Retrieve related objects.
 		 * @param key {string} The relation key to fetch models for.
 		 * @param options {Object} Options for 'Backbone.Model.fetch' and 'Backbone.sync'.
+		 * @param update {boolean} Whether to force a fetch from the server (updating existing models).
 		 * @return {jQuery.when[]} An array of request objects
 		 */
-		fetchRelated: function( key, options ) {
+		fetchRelated: function( key, options, update ) {
 			options || ( options = {} );
 			var setUrl,
 				requests = [],
@@ -1162,7 +1163,7 @@
 				keyContents = rel && rel.keyContents,
 				toFetch = keyContents && _.select( _.isArray( keyContents ) ? keyContents : [ keyContents ], function( item ) {
 					var id = Backbone.Relational.store.resolveIdForItem( rel.relatedModel, item );
-					return id && !Backbone.Relational.store.find( rel.relatedModel, id );
+					return id && ( update || !Backbone.Relational.store.find( rel.relatedModel, id ) );
 				}, this );
 			
 			if ( toFetch && toFetch.length ) {
@@ -1352,22 +1353,22 @@
 							json[ rel.keyDestination ] = null;
 						}
 					}
-					else if (_.isArray( rel.options.includeInJSON ) ) {
+					else if ( _.isArray( rel.options.includeInJSON ) ) {
 						if ( value instanceof Backbone.Collection ) {
 							var valueSub = [];
-							value.each(function(model) {
+							value.each( function( model ) {
 								var curJson = {};
-								_.each(rel.options.includeInJSON, function(key) {
-									curJson[key] = model.get(key);
+								_.each( rel.options.includeInJSON, function( key ) {
+									curJson[ key ] = model.get( key );
 								});
-								valueSub.push(curJson);
+								valueSub.push( curJson );
 							});
 							json[ rel.keyDestination ] = valueSub;
 						}
 						else if ( value instanceof Backbone.Model ) {
 							var valueSub = {};
-							_.each(rel.options.includeInJSON, function(key) {
-								valueSub[key] = value.get(key);
+							_.each( rel.options.includeInJSON, function( key ) {
+								valueSub[ key ] = value.get( key );
 							});
 							json[ rel.keyDestination ] = valueSub;
 						}
@@ -1378,7 +1379,6 @@
 					else {
 						delete json[ rel.key ];
 					}
-
 
 					if ( rel.keyDestination !== rel.key ) {
 						delete json[ rel.key ];
