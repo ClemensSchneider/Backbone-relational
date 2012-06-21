@@ -19,11 +19,11 @@
 		exports = module.exports = Backbone;
 	}
 	else {
-		var _ = window._;
+		_ = window._;
 		Backbone = window.Backbone;
 		exports = window;
 	}
-	
+
 	Backbone.Relational = {
 		showWarnings: true
 	};
@@ -120,8 +120,13 @@
 		this._collections = [];
 		this._reverseRelations = [];
 		this._subModels = [];
+		this._modelScopes = [ exports ];
 	};
 	_.extend( Backbone.Store.prototype, Backbone.Events, {
+		addModelScope: function( scope ) {
+			this._modelScopes.push( scope );
+		},
+
 		/**
 		 * Add a set of subModelTypes to the store, that can be used to resolve the '_superModel'
 		 * for a model later in 'setupSuperModel'.
@@ -244,10 +249,20 @@
 		 * @return {Object}
 		 */
 		getObjectByName: function( name ) {
-			var type = _.reduce( name.split( '.' ), function( memo, val ) {
-				return memo[ val ];
-			}, exports);
-			return type !== exports ? type: null;
+			var parts = name.split( '.' ),
+				type = null;
+
+			_.find( this._modelScopes, function( scope ) {
+				type = _.reduce( parts, function( memo, val ) {
+					return memo[ val ];
+				}, scope );
+
+				if ( type && type !== scope ) {
+					return true;
+				}
+			}, this );
+
+			return type;
 		},
 		
 		_createCollection: function( type ) {
@@ -563,7 +578,7 @@
 		sanitizeOptions: function( options ) {
 			options = options ? _.clone( options ) : {};
 			if ( options.silent ) {
-				options = _.extend( {}, options, { silentChange: true } );
+				options.silentChange = true;
 				delete options.silent;
 			}
 			return options;
@@ -578,7 +593,7 @@
 		unsanitizeOptions: function( options ) {
 			options = options ? _.clone( options ) : {};
 			if ( options.silentChange ) {
-				options = _.extend( {}, options, { silent: true } );
+				options.silent = true;
 				delete options.silentChange;
 			}
 			return options;
