@@ -833,7 +833,7 @@
 				var touchedModels = [];
 				if ( this.keyContents instanceof Backbone.Collection ) {
 					models = this.keyContents.models;
-					touchedModels = this.keyContent.toArray();
+					touchedModels = this.keyContents.toArray();
 				}
 				else {
 					// Handle cases the an API/user supplies just an Object/id instead of an Array
