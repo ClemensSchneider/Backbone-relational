@@ -1,10 +1,10 @@
-/**	
+/**
  * Backbone-relational.js 0.5.0
  * (c) 2011 Paul Uithol
  * 
- * Backbone-relational may be freely distributed under the MIT license.
+ * Backbone-relational may be freely distributed under the MIT license; see the accompanying LICENSE.txt.
  * For details and documentation: https://github.com/PaulUithol/Backbone-relational.
- * Depends on Backbone: https://github.com/documentcloud/backbone.
+ * Depends on Backbone (and thus on Underscore as well): https://github.com/documentcloud/backbone.
  */
 ( function( undefined ) {
 	"use strict";
@@ -27,7 +27,7 @@
 	Backbone.Relational = {
 		showWarnings: true
 	};
-	
+
 	/**
 	 * Semaphore mixin; can be used as both binary and counting.
 	 **/
@@ -385,7 +385,7 @@
 		
 		this.key = this.options.key;
 		this.keySource = this.options.keySource || this.key;
-		this.keyDestination = this.options.keyDestination || this.options.keySource || this.key;
+		this.keyDestination = this.options.keyDestination || this.keySource || this.key;
 
 		// 'exports' should be the global object where 'relatedModel' can be found on if given as a string.
 		this.relatedModel = this.options.relatedModel;
@@ -487,7 +487,7 @@
 				warn && console.warn( 'Relation=%o; no model, key or relatedModel (%o, %o, %o)', this, m, k, rm );
 				return false;
 			}
-			// Check if the type in 'relatedModel' inherits from Backbone.RelationalModel
+			// Check if the type in 'model' inherits from Backbone.RelationalModel
 			if ( !( m.prototype instanceof Backbone.RelationalModel ) ) {
 				warn && console.warn( 'Relation=%o; model does not inherit from Backbone.RelationalModel (%o)', this, i );
 				return false;
@@ -1118,11 +1118,12 @@
 		updateRelations: function( options ) {
 			if ( this._isInitialized && !this.isLocked() ) {
 				_.each( this._relations, function( rel ) {
-						var val = this.attributes[ rel.key ];
-						if ( rel.related !== val ) {
-							this.trigger( 'relational:change:' + rel.key, this, val, options || {} );
-						}
-					}, this );
+					// Update from data in `rel.keySource` if set, or `rel.key` otherwise
+					var val = this.attributes[ rel.keySource ] || this.attributes[ rel.key ];
+					if ( rel.related !== val ) {
+						this.trigger( 'relational:change:' + rel.key, this, val, options || {} );
+					}
+				}, this );
 			}
 		},
 		
