@@ -179,6 +179,8 @@ $(document).ready(function() {
 
 
 	window.Node = Backbone.RelationalModel.extend({
+		urlRoot: '/node/',
+
 		relations: [{
 				type: Backbone.HasOne,
 				key: 'parent',
@@ -494,24 +496,24 @@ $(document).ready(function() {
 				}
 			});
 
-			var whale = new Mammal( { id: 1, species: 'whale' } );
-
-			var numCollections = Backbone.Relational.store._collections.length;
-
 			window.Primate = Mammal.extend();
 			window.Carnivore = Mammal.extend();
 
-			var lion = new Carnivore( { id: 2, species: 'lion' } );
-			var wolf = new Carnivore( { id: 3, species: 'wolf' } );
+			var lion = new Carnivore( { id: 1, species: 'lion' } );
+			var wolf = new Carnivore( { id: 2, species: 'wolf' } );
+
+			var numCollections = Backbone.Relational.store._collections.length;
+
+			var whale = new Mammal( { id: 3, species: 'whale' } );
 
 			equal( Backbone.Relational.store._collections.length, numCollections, "`_collections` should have remained the same" );
 
-			ok( Backbone.Relational.store.find( Mammal, 1 ) === whale );
-			ok( Backbone.Relational.store.find( Mammal, 2 ) === lion );
-			ok( Backbone.Relational.store.find( Mammal, 3 ) === wolf );
-			ok( Backbone.Relational.store.find( Carnivore, 1 ) !== whale );
-			ok( Backbone.Relational.store.find( Carnivore, 2 ) === lion );
-			ok( Backbone.Relational.store.find( Carnivore, 3 ) === wolf );
+			ok( Backbone.Relational.store.find( Mammal, 1 ) === lion );
+			ok( Backbone.Relational.store.find( Mammal, 2 ) === wolf );
+			ok( Backbone.Relational.store.find( Mammal, 3 ) === whale );
+			ok( Backbone.Relational.store.find( Carnivore, 1 ) === lion );
+			ok( Backbone.Relational.store.find( Carnivore, 2 ) === wolf );
+			ok( Backbone.Relational.store.find( Carnivore, 3 ) !== whale );
 
 			var gorilla = new Primate( { id: 4, species: 'gorilla' } );
 
@@ -1315,6 +1317,35 @@ $(document).ready(function() {
 
 			equal( artis.get( 'animals' ).at( 0 ), animal, "Artis has a Hippo" );
 			equal( animal.get( 'livesIn' ), artis, "The Hippo is in Artis" );
+		});
+
+		test( "id checking handles for `undefined`, `null`, `0` ids properly", function() {
+			var parent = new Node();
+			var child = new Node( { parent: parent } );
+
+			equal( child.get( 'parent' ), parent );
+			parent.destroy();
+			equal( child.get( 'parent' ), null );
+
+			// It used to be the case that `randomOtherNode` became `child`s parent here, since both the `parent.id`
+			// (which is stored as the relation's `keyContents`) and `randomOtherNode.id` were undefined.
+			var randomOtherNode = new Node();
+			equal( child.get( 'parent' ), null );
+
+			// Create a child with parent id=0, then create the parent
+			child = new Node( { parent: 0 } );
+			equal( child.get( 'parent' ), null );
+			parent = new Node( { id: 0 } );
+			equal( child.get( 'parent' ), parent );
+
+			child.destroy();
+			parent.destroy();
+
+			// The other way around; create the parent with id=0, then the child
+			parent = new Node( { id: 0 } );
+			equal( parent.get( 'children' ).length, 0 );
+			child = new Node( { parent: 0 } );
+			equal( child.get( 'parent' ), parent );
 		});
 
 
