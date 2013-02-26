@@ -386,6 +386,52 @@ $(document).ready(function() {
 		});
 	}
 
+	module ( "General / Backbone", { setup: reset } );
+
+		test( "Prototypes, constructors and inheritance", function() {
+			// This stuff makes my brain hurt a bit. So, for reference:
+			var Model = Backbone.Model.extend(),
+				i = new Backbone.Model(),
+				iModel = new Model();
+
+			var RelModel= Backbone.RelationalModel.extend(),
+				iRel = new Backbone.RelationalModel(),
+				iRelModel = new RelModel();
+
+			// Both are functions, so their `constructor` is `Function`
+			ok( Backbone.Model.constructor == Backbone.RelationalModel.constructor );
+
+			ok( Backbone.Model != Backbone.RelationalModel );
+			ok( Backbone.Model == Backbone.Model.prototype.constructor );
+			ok( Backbone.RelationalModel == Backbone.RelationalModel.prototype.constructor );
+			ok( Backbone.Model.prototype.constructor != Backbone.RelationalModel.prototype.constructor );
+
+			ok( Model.prototype instanceof Backbone.Model );
+			ok( !( Model.prototype instanceof Backbone.RelationalModel ) );
+			ok( RelModel.prototype instanceof Backbone.Model );
+			ok( Backbone.RelationalModel.prototype instanceof Backbone.Model );
+			ok( RelModel.prototype instanceof Backbone.RelationalModel );
+
+			ok( i instanceof Backbone.Model );
+			ok( !( i instanceof Backbone.RelationalModel ) );
+			ok( iRel instanceof Backbone.Model );
+			ok( iRel instanceof Backbone.RelationalModel );
+
+			ok( iModel instanceof Backbone.Model );
+			ok( !( iModel instanceof Backbone.RelationalModel ) );
+			ok( iRelModel instanceof Backbone.Model );
+			ok( iRelModel instanceof Backbone.RelationalModel );
+		});
+
+		test('update', 1, function() {
+			var a = new Backbone.Model({id: 3, label: 'a'} ),
+				b = new Backbone.Model({id: 2, label: 'b'} ),
+				col = new Backbone.Collection([a]);
+
+			col.update([a,b], {add: true, merge: false, remove: true});
+			ok( col.length == 2 );
+		});
+
 
 	module( "Backbone.Semaphore", { setup: reset } );
 
@@ -695,12 +741,28 @@ $(document).ready(function() {
 		});
 		
 		test( "getRelations", function() {
-			equal( person1.getRelations().length, 6 );
+			var relations = person1.getRelations();
+
+			equal( relations.length, 6 );
+
+			ok( _.every( relations, function( rel ) {
+					return rel instanceof Backbone.Relation;
+				})
+			);
 		});
 		
 		test( "getRelation", function() {
-			var rel = person1.getRelation( 'user' );
-			equal( rel.key, 'user' );
+			var userRel = person1.getRelation( 'user' );
+
+			ok( userRel instanceof Backbone.HasOne );
+			equal( userRel.key, 'user' );
+
+			var jobsRel = person1.getRelation( 'jobs' );
+
+			ok( jobsRel instanceof Backbone.HasMany );
+			equal( jobsRel.key, 'jobs' );
+
+			ok( person1.getRelation( 'nope' ) == null );
 		});
 		
 		test( "fetchRelated on a HasOne relation", function() {
@@ -725,7 +787,7 @@ $(document).ready(function() {
 			// Trigger the 'success' callback to fire the 'destroy' event
 			window.requests[ window.requests.length - 1 ].success();
 
-			equal( person.get( 'user' ), null, "User has been destroyed & removed" );
+			ok( !person.get( 'user' ), "User has been destroyed & removed" );
 			equal( errorCount, 1, "The error callback executed successfully" );
 			
 			var person2 = new Person({
@@ -935,8 +997,8 @@ $(document).ready(function() {
 			ok( person instanceof Person );
 			ok( origPersonCollSize + 1 === personColl.length, "No person was found (1 created)" );
 
-			// Find when options.update is false
-			person = Person.findOrCreate( { id: person1.id, name: 'phil' }, { update: false } );
+			// Find when options.merge is false
+			person = Person.findOrCreate( { id: person1.id, name: 'phil' }, { merge: false } );
 
 			equal( person.get( 'name' ), 'dude' );
 			equal( person1.get( 'name' ), 'dude' );
@@ -1651,14 +1713,14 @@ $(document).ready(function() {
 			var lion = new Animal({ livesIn: 2 });
 
 			ok( lion.get( 'livesIn' ) === zoo1, "zoo1 connected to lion" );
-			ok( zoo1.get( 'animals' ).size() === 1, "zoo1 has one Animal" );
+			ok( zoo1.get( 'animals' ).length === 1, "zoo1 has one Animal" );
 			ok( zoo1.get( 'animals' ).at( 0 ) === lion, "lion added to zoo1" );
 			ok( zoo1.get( 'animals' ).get( lion ) === lion, "lion can be retrieved from zoo1" );
 
 			lion.set( { id: 5, livesIn: 2 } );
 
 			ok( lion.get( 'livesIn' ) === zoo1, "zoo1 connected to lion" );
-			ok( zoo1.get( 'animals' ).size() === 1, "zoo1 has one Animal" );
+			ok( zoo1.get( 'animals' ).length === 1, "zoo1 has one Animal" );
 			ok( zoo1.get( 'animals' ).at( 0 ) === lion, "lion added to zoo1" );
 			ok( zoo1.get( 'animals' ).get( lion ) === lion, "lion can be retrieved from zoo1" );
 
@@ -1668,7 +1730,7 @@ $(document).ready(function() {
 				zoo2 = new Zoo( { animals: [ 6 ] } );
 
 			ok( elephant.get( 'livesIn' ) === zoo2, "zoo2 connected to elephant" );
-			ok( zoo2.get( 'animals' ).size() === 1, "zoo2 has one Animal" );
+			ok( zoo2.get( 'animals' ).length === 1, "zoo2 has one Animal" );
 			ok( zoo2.get( 'animals' ).at( 0 ) === elephant, "elephant added to zoo2" );
 			ok( zoo2.get( 'animals' ).get( elephant ) === elephant, "elephant can be retrieved from zoo2" );
 
@@ -1676,7 +1738,7 @@ $(document).ready(function() {
 
 			ok( elephant.get( 'livesIn' ) === zoo2, "zoo2 connected to elephant" );
 			ok( tiger.get( 'livesIn' ) === zoo2, "zoo2 connected to tiger" );
-			ok( zoo2.get( 'animals' ).size() === 2, "zoo2 has one Animal" );
+			ok( zoo2.get( 'animals' ).length === 2, "zoo2 has one Animal" );
 			ok( zoo2.get( 'animals' ).at( 0 ) === elephant, "elephant added to zoo2" );
 			ok( zoo2.get( 'animals' ).at( 1 ) === tiger, "tiger added to zoo2" );
 			ok( zoo2.get( 'animals' ).get( elephant ) === elephant, "elephant can be retrieved from zoo2" );
@@ -2791,7 +2853,7 @@ $(document).ready(function() {
 			equal( lion.get( 'name' ), 'Simba' );
 		});
 
-		test( "add/remove/update", function() {
+		test( "add/remove/update (with `add`, `remove` and `merge` options)", function() {
 			var coll = new AnimalCollection();
 
 			/**
@@ -2815,11 +2877,12 @@ $(document).ready(function() {
 			]);
 
 			var giraffe = coll.get( 1 ),
-				gorilla = coll.get( 2 );
+				gorilla = coll.get( 2 ),
+				dolphin = new Animal( { species: 'dolphin' } ),
+				hippo = new Animal( { id: 4, species: 'hippo' } );
 
 			ok( coll.length === 2 );
 
-			var dolphin = new Animal( { species: 'dolphin' } );
 			coll.add( dolphin );
 
 			ok( coll.length === 3 );
@@ -2827,7 +2890,7 @@ $(document).ready(function() {
 			// Update won't do anything
 			coll.add( {	id: 1, species: 'giraffe', name: 'Long John' } );
 
-			ok( !coll.get( 1 ).get( 'name' ) );
+			ok( !coll.get( 1 ).get( 'name' ), 'name=' + coll.get( 1 ).get( 'name' ) );
 
 			// Update with `merge: true` will update the animal
 			coll.add( { id: 1, species: 'giraffe', name: 'Long John' }, { merge: true } );
@@ -2860,15 +2923,59 @@ $(document).ready(function() {
 			ok( coll.get( 2 ) === gorilla, "`gorilla` is left in coll" );
 			ok( !coll.get( 2 ).get( 'name' ), "`gorilla` name not updated" );
 
-			// This should remove `giraffe`, leave `dolphin`, and update `gorilla`.
+			// This should remove `giraffe`, add `hippo`, leave `dolphin`, and update `gorilla`.
 			options = { add: true, merge: true, remove: true };
-			coll.update( [ dolphin, { id: 2, name: 'Silverback' } ], options );
+			coll.update( [ 4, dolphin, { id: 2, name: 'Silverback' } ], options );
 
-			ok( coll.length === 2 );
+			ok( coll.length === 3 );
 			ok( !coll.get( 1 ), "`giraffe` removed from coll" );
 			equal( coll.get( 2 ), gorilla );
+			ok( !coll.get( 3 ) );
+			equal( coll.get( 4 ), hippo );
 			equal( coll.get( dolphin ), dolphin );
 			equal( gorilla.get( 'name' ), 'Silverback' );
+		});
+
+		test( "add/remove/update on a relation (with `add`, `remove` and `merge` options)", function() {
+			var zoo = new Zoo(),
+				animals = zoo.get( 'animals' ),
+				a = new Animal( { id: 'a' } ),
+				b = new Animal( { id: 'b' } ),
+				c = new Animal( { id: 'c' } );
+
+			// The default is to call `Collection.update` without specifying options explicitly;
+			// the defaults are { add: true, merge: true, remove: true }.
+			zoo.set( 'animals', [ a ] );
+			ok( animals.length == 1, 'animals.length=' + animals.length + ' == 1?' );
+
+			zoo.set( 'animals', [ a, b ], { add: false, merge: true, remove: true } );
+			ok( animals.length == 1, 'animals.length=' + animals.length + ' == 1?' );
+
+			zoo.set( 'animals', [ b ], { add: false, merge: false, remove: true } );
+			ok( animals.length == 0, 'animals.length=' + animals.length + ' == 0?' );
+
+			zoo.set( 'animals', [ { id: 'a', species: 'a' } ], { add: false, merge: true, remove: false } );
+			ok( animals.length == 0, 'animals.length=' + animals.length + ' == 0?' );
+			ok( a.get( 'species' ) === 'a', "`a` not added, but attributes did get merged" );
+
+			zoo.set( 'animals', [ { id: 'b', species: 'b' } ], { add: true, merge: false, remove: false } );
+			ok( animals.length == 1, 'animals.length=' + animals.length + ' == 1?' );
+			ok( !b.get( 'species' ), "`b` added, but attributes did not get merged" );
+
+			zoo.set( 'animals', [ { id: 'c', species: 'c' } ], { add: true, merge: false, remove: true } );
+			ok( animals.length == 1, 'animals.length=' + animals.length + ' == 1?' );
+			ok( !animals.get( 'b' ), "b removed from animals" );
+			ok( animals.get( 'c' ) === c, "c added to animals" );
+			ok( !c.get( 'species' ), "`c` added, but attributes did not get merged" );
+
+			zoo.set( 'animals', [ a, { id: 'b', species: 'b' } ] );
+			ok( animals.length == 2, 'animals.length=' + animals.length + ' == 2?' );
+			ok( b.get( 'species' ) === 'b', "`b` added, attributes got merged" );
+			ok( !animals.get( 'c' ), "c removed from animals" );
+
+			zoo.set( 'animals', [ { id: 'c', species: 'c' } ], { add: true, merge: true, remove: false } );
+			ok( animals.length == 3, 'animals.length=' + animals.length + ' == 3?' );
+			ok( c.get( 'species' ) === 'c', "`c` added, attributes got merged" );
 		});
 
 
@@ -3049,6 +3156,7 @@ $(document).ready(function() {
 
 		test( "Creation and destruction", 0, function() {
 			var relatedModelAddedCount = 0;
+
 			Backbone.Relation.prototype._relatedModelAdded = function( model, coll, options ) {
 				// Allow 'model' to set up its relations, before calling 'tryAddRelated'
 				// (which can result in a call to 'addRelated' on a relation of 'model')

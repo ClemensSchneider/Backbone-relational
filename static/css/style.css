@@ -1,3 +1,7 @@
+header, nav, section, article, aside, footer, hgroup {
+	display: block;
+}
+
 @font-face {
 	font-family: 'MuseoSlab500';
 	font-weight: normal;
@@ -15,6 +19,7 @@ body {
 
 a, a:visited {
 	color: #444;
+	text-decoration: underline;
 }
 a:active, a:hover {
 	color: #000;
@@ -51,6 +56,11 @@ h1, h2, h3, h4, h5, h6, .toc_title {
 		line-height: 1.5;
 		margin: 1.5em 0 0;
 	}
+	h1 small, h2 small, h3 small, h4 small, h5 small, h6 small {
+		font-size: 12px;
+		font-family:  "Helvetica Neue", "Lucida Grande", "Lucida Sans Unicode", Helvetica, Arial, sans-serif;
+		font-weight: normal;
+	}
 
 p, ol, ul, dl, pre, figure, footer {
     margin: 0 0 1.5em 0;
@@ -67,6 +77,20 @@ ul {
 		content: "\2013";
 		position: relative;
 		left: -1ex;
+	}
+
+dl {
+	clear: both;
+}
+	dl dt {
+		clear: left;
+		float: left;
+		margin-bottom: .5em;
+		width: 5em;
+	}
+	dl dd {
+		margin-left: 5em;
+		margin-bottom: .5em;
 	}
 
 .button {
@@ -142,16 +166,18 @@ div#sidebar {
 	background: #fff;
 	position: fixed;
 	z-index: 10;
-	top: 0; left: 0; bottom: 0;
-	width: 220px;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	width: 230px;
 	overflow-y: auto;
 	overflow-x: hidden;
 	-webkit-overflow-scrolling: touch;
 	padding: 15px 15px 30px 30px;
 	border-right: 1px solid #bbb;
-	box-shadow: 0 0 20px #ccc;
 	-webkit-box-shadow: 0 0 20px #ccc;
 	-moz-box-shadow: 0 0 20px #ccc;
+	box-shadow: 0 0 20px #ccc;
 }
 	div#sidebar a, a:visited {
 		color: black;
@@ -172,6 +198,7 @@ div#sidebar {
 	ul.toc_section {
 		font-size: 12px;
 		line-height: 20px;
+		margin-bottom: .5em;
 	}
 		ul.toc_section ul {
 			margin: 0 0 0 1em;
@@ -183,12 +210,15 @@ div#sidebar {
 div.container {
 	position: relative;
 	width: 45em;
-	margin: 40px 0 50px 300px;
+	margin: 40px 0 50px 320px;
 }
-img#logo {
-	width: 450px;
-	height: 80px;
-}
+	div.container ul li {
+		margin-bottom: .5em;
+		text-indent: -1.5ex;
+	}
+	div.container ul.small {
+		font-size: 14px;
+	}
 
 div.run {
 	cursor: pointer;
@@ -199,8 +229,6 @@ div.run {
 	right: 15px;
 }
 	div.run a {
-		-webkit-border-radius: .2em; 
-		-moz-border-radius: .2em;
 		border-radius: .2em;
 		padding: .2em .5em .2em .6em;
 	}
@@ -210,13 +238,6 @@ p.warning {
 	font-style: italic;
 }
 
-div.container ul li {
-	margin-bottom: .5em;
-}
-div.container ul.small {
-	font-size: 14px;
-}
-
 a.punch {
 	display: inline-block;
 	background: #4162a8;
@@ -224,15 +245,9 @@ a.punch {
 	border-right: 1px solid #1f2d4d;
 	border-bottom: 1px solid #151e33;
 	border-left: 1px solid #1f2d4d;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	-ms-border-radius: 4px;
-	-o-border-radius: 4px;
-	border-radius: 4px;
+	border-radius: .4em;
 	-webkit-box-shadow: inset 0 1px 10px 1px #5c8bee, 0px 1px 0 #1d2c4d, 0 6px 0px #1f3053, 0 8px 4px 1px #333;
 	-moz-box-shadow: inset 0 1px 10px 1px #5c8bee, 0px 1px 0 #1d2c4d, 0 6px 0px #1f3053, 0 8px 4px 1px #333;
-	-ms-box-shadow: inset 0 1px 10px 1px #5c8bee, 0px 1px 0 #1d2c4d, 0 6px 0px #1f3053, 0 8px 4px 1px #333;
-	-o-box-shadow: inset 0 1px 10px 1px #5c8bee, 0px 1px 0 #1d2c4d, 0 6px 0px #1f3053, 0 8px 4px 1px #333;
 	box-shadow: inset 0 1px 10px 1px #5c8bee, 0px 1px 0 #1d2c4d, 0 6px 0px #1f3053, 0 8px 4px 1px #333;
 	color: #fff;
 	font-weight: bold;
@@ -248,20 +263,16 @@ a.punch {
 	a.punch:hover {
 		-webkit-box-shadow: inset 0 0px 20px 1px #87adff, 0px 1px 0 #1d2c4d, 0 6px 0px #1f3053, 0 8px 4px 1px #333;
 		-moz-box-shadow: inset 0 0px 20px 1px #87adff, 0px 1px 0 #1d2c4d, 0 6px 0px #1f3053, 0 8px 4px 1px #333;
-		-ms-box-shadow: inset 0 0px 20px 1px #87adff, 0px 1px 0 #1d2c4d, 0 6px 0px #1f3053, 0 8px 4px 1px #333;
-		-o-box-shadow: inset 0 0px 20px 1px #87adff, 0px 1px 0 #1d2c4d, 0 6px 0px #1f3053, 0 8px 4px 1px #333;
 		box-shadow: inset 0 0px 20px 1px #87adff, 0px 1px 0 #1d2c4d, 0 6px 0px #1f3053, 0 8px 4px 1px #333;
 		cursor: pointer;
 	}
 	a.punch:active {
 		-webkit-box-shadow: inset 0 1px 10px 1px #5c8bee, 0 1px 0 #1d2c4d, 0 2px 0 #1f3053, 0 4px 3px 0 #333;
 		-moz-box-shadow: inset 0 1px 10px 1px #5c8bee, 0 1px 0 #1d2c4d, 0 2px 0 #1f3053, 0 4px 3px 0 #333;
-		-ms-box-shadow: inset 0 1px 10px 1px #5c8bee, 0 1px 0 #1d2c4d, 0 2px 0 #1f3053, 0 4px 3px 0 #333;
-		-o-box-shadow: inset 0 1px 10px 1px #5c8bee, 0 1px 0 #1d2c4d, 0 2px 0 #1f3053, 0 4px 3px 0 #333;
 		box-shadow: inset 0 1px 10px 1px #5c8bee, 0 1px 0 #1d2c4d, 0 2px 0 #1f3053, 0 4px 3px 0 #333;
 		margin-top: 5px; margin-bottom: 10px;
 	}
-	
+
 a img {
 	border: 0;
 }
@@ -301,20 +312,31 @@ h3.code, h4.code, h5.code, code, pre, q {
 }
 code, pre, q {
 	font-size: 13px;
+	font-weight: normal;
 	line-height: 18px;
 }
 	q:before, q:after {
 		content: '';
 	}
 	q {
+		border-radius: .2em;
+		display: inline-block; /* Prevents the syndrome where the left border and part of the padding are rendered on the previous line */
 		padding: 0 3px;
+		margin: 0;
 		background: #fff;
 		border: 1px solid #ddd;
 	}
+		li q {
+			display: inline; /* No idea why, but having them `inline-block` in a list gets the sizing wrong */
+		}
 		a q {
 			border-bottom: none;
 			color: #111;
+			text-decoration: underline;
 		}
+			a:hover q {
+				color: #000;
+			}
 	q , code {
 		white-space: nowrap;
 	}
@@ -337,7 +359,15 @@ code, pre, q {
 		border-top: 1px solid #444;
 		margin-top: -1.5em;
 	}
-	
+
+#change-log small {
+	float: right;
+}
+	#change-log small .date {
+		color: #999;
+	}
+
+
 @media only screen and (-webkit-max-device-pixel-ratio: 1) and (max-width: 600px),
 		only screen and (max--moz-device-pixel-ratio: 1) and (max-width: 600px) {
 	div#sidebar {
@@ -357,6 +387,7 @@ code, pre, q {
 		width: auto;
 	}
 }
+
 
 @media only screen and (-webkit-min-device-pixel-ratio: 1.5) and (max-width: 640px),
 	only screen and (-o-min-device-pixel-ratio: 3/2) and (max-width: 640px),
