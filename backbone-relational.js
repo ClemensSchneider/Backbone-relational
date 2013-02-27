@@ -1496,9 +1496,9 @@
 					}
 				}
 				else if ( _.isArray( rel.options.includeInJSON ) ) {
-					var valueSub = [];
 
 					if ( value instanceof Backbone.Collection ) {
+						var valueSub = [];
 						value.each( function( model ) {
 							var curJson = {};
 							_.each( rel.options.includeInJSON, function( key ) {
@@ -1509,6 +1509,7 @@
 						json[ rel.keyDestination ] = valueSub;
 					}
 					else if ( value instanceof Backbone.Model ) {
+						var valueSub = {};
 						_.each( rel.options.includeInJSON, function( key ) {
 							valueSub[ key ] = value.get( key );
 						});
