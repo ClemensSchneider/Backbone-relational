@@ -30,7 +30,7 @@
 		Backbone-relational.js <span class="version">(0.7.1)</span>
 	</a>
 
-	<ul class="toc_section">
+	<ul>
 		<li class="link_out"><a href="https://github.com/PaulUithol/Backbone-relational">GitHub Repository</a></li>
 	</ul>
 
@@ -46,10 +46,10 @@
 		Backbone.RelationalModel
 	</a>
 
-	<ul class="toc_section">
+	<ul>
 		<li>
 			<a href="#RelationalModel-relations">relations</a>
-			<ul class="toc_section">
+			<ul>
 				<li><a href="#relations-relatedModel">relatedModel</a></li>
 				<li><a href="#relations-key">key</a></li>
 				<li><a href="#relations-type">type</a></li>
@@ -60,24 +60,27 @@
 				<li><a href="#relations-includeInJSON">includeInJSON</a></li>
 				<li><a href="#relations-createModels">createModels</a></li>
 				<li><a href="#relations-reverseRelation">reverseRelation</a></li>
+				<li><a href="#relations-autoFetch">autoFetch</a></li>
 			</ul>
 		</li>
+	</ul>
+	<ul>
 		<li><a href="#RelationalModel-subModelTypes">subModelTypes</a></li>
 		<li><a href="#RelationalModel-subModelTypeAttribute">subModelTypeAttribute</a></li>
 	</ul>
-	<ul class="toc_section">
+	<ul>
 		<li><a href="#RelationalModel-getRelation">getRelation</a></li>
 		<li><a href="#RelationalModel-getRelations">getRelations</a></li>
 		<li><a href="#RelationalModel-fetchRelated">fetchRelated</a></li>
 		<li><a href="#RelationalModel-set">set</a></li>
 		<li><a href="#RelationalModel-toJSON">toJSON</a></li>
 	</ul>
-	<ul class="toc_section">
+	<ul>
 		<li><a href="#RelationalModel-setup">setup</a></li>
 		<li><a href="#RelationalModel-build">build</a></li>
 		<li><a href="#RelationalModel-findOrCreate">findOrCreate</a></li>
 	</ul>
-	<ul class="toc_section">
+	<ul>
 		<li><a href="#RelationalModel-events"><strong>Catalog of Events</strong></a></li>
 	</ul>
 
@@ -85,7 +88,7 @@
 		Backbone.Relation
 	</a>
 
-	<ul class="toc_section">
+	<ul>
 		<li><a href="#Relation-HasOne">HasOne</a></li>
 		<li><a href="#Relation-HasMany">HasMany</a></li>
 	</ul>
@@ -94,7 +97,7 @@
 		Backbone.Store
 	</a>
 
-	<ul class="toc_section">
+	<ul>
 		<li><a href="#Store-addModelScope">addModelScope</a></li>
 		<li><a href="#Store-reset">reset</a></li>
 	</ul>
@@ -213,7 +216,7 @@
 				<strong>reset</strong> of a HasMany relation with <a href="#RelationalModel-events">reset:&lt;key&gt;</a>.
 			</li>
 			<li>
-				<strong>changes</strong> to the key itself on HasMany and HasOne relations with <a href="#RelationalModel-events">update:
+				<strong>changes</strong> to the key itself on HasMany and HasOne relations with <a href="#RelationalModel-events">change:
 				&lt;key&gt;</a>.
 			</li>
 		</ul>
@@ -849,28 +852,21 @@ MyModel.setup()
 			Catalog of Events
 		</h4>
 		<p>
-			This is the complete list of all of the events that Backbone-relational makes available to you, on top of
-			the events already found in Backbone.
+			Backbone-relational makes a couple of additional events available to you, on top of	the events already found in Backbone.
 		</p>
 
 		<ul class="small">
 			<li>
-				<strong>"add"</strong> - triggered on addition to a HasMany relation.
+				An <strong>"add"</strong> event is triggered on addition to a HasMany relation. Bind to:<br/>
+				<q>add:&lt;key&gt;</q> &rarr;<code>function(addedModel&lt;Backbone.Model&gt;, related&lt;Backbone.Collection&gt;)</code>
 			</li>
 			<li>
-				<strong>"add:&lt;key&gt;"</strong><code>(addedModel&lt;Backbone.Model&gt;, related&lt;Backbone.Collection&gt;)</code>
+				A <strong>"remove"</strong> event is triggered on removal from a HasMany relation. Bind to:<br/>
+				<q>remove:&lt;key&gt;</q> &rarr;<code>function(removedModel&lt;Backbone.Model&gt;, related&lt;Backbone.Collection&gt;)</code>
 			</li>
 			<li>
-				<strong>"remove"</strong> - triggered on removal from a HasMany relation.
-			</li>
-			<li>
-				 <strong>"remove:&lt;key&gt;"</strong><code>(removedModel&lt;Backbone.Model&gt;, related&lt;Backbone.Collection&gt;)</code>
-			</li>
-			<li>
-				<strong>"update"</strong> - triggered on changes to the key itself on HasMany and HasOne relations.
-			</li>
-			<li>
-				<strong>"update:&lt;key&gt;"</strong><code>(model&lt;Backbone.Model&gt;, related&lt;Backbone.Model|Backbone.Collection&gt;)</code>
+				A <strong>"change"</strong> event is triggered on changes to the contents of a relation. Bind to:<br/>
+				<q>change:&lt;key&gt;</q> &rarr;<code>function(model&lt;Backbone.Model&gt;, related&lt;Backbone.Model|Backbone.Collection&gt;)</code>
 			</li>
 		</ul>
 	</section>
@@ -900,14 +896,14 @@ MyModel.setup()
 	</section>
 
 	<section id="Store">
-		<h2 >Backbone.Relational.Store</h2>
+		<h2 >Backbone.Store</h2>
 		<p>
-			The <strong>Store</strong> is a global model cache. Per application, one instance is created, which is accessible as
-			<q>Backbone.store</q> (much like <q>Backbone.History</q>).
+			<strong>Backbone.Store</strong> is a global model cache. Per application, one instance is created (much like <q>Backbone.History</q>),
+			which is accessible as <q>Backbone.Relational.store</q>.
 		</p>
 
 		<h4 class="code" id="Store-addModelScope">
-			addModelScope<code>Backbone.store.addModelScope( scope&lt;object&gt; )</code>
+			addModelScope<code>Backbone.Relational.store.addModelScope( scope&lt;object&gt; )</code>
 		</h4>
 		<p>
 			When working in an environment without a shared global scope (like <q>window</q> is in a browser), you'll need
@@ -915,7 +911,7 @@ MyModel.setup()
 		</p>
 
 		<h4 class="code" id="Store-reset">
-			reset<code>Backbone.store.reset()</code>
+			reset<code>Backbone.Relational.store.reset()</code>
 		</h4>
 		<p>
 			Reset the <q>store</q> to it's original state. This will disable relations for all models created up to this point,
@@ -973,29 +969,28 @@ ourHouse.fetchRelated( 'occupants' );
 // Here, we listen for changes to `ourHouse.occupants`.
 ourHouse
 	.on( 'add:occupants', function( model, coll ) {
-		// create a View?
-		console.debug( 'add %o', model );
+		console.log( 'add %o', model );
+		// Do something. Create a View?
 	})
 	.on( 'remove:occupants', function( model, coll ) {
-		// destroy a View?
-		console.debug( 'remove %o', model );
+		console.log( 'remove %o', model );
+		// Do somehting. Destroy a View?
 	});
 
 // Use the 'update' event to listen for changes on a HasOne relation (like 'Person.livesIn').
-paul.on( 'update:livesIn', function( model, attr ) {
-	console.debug( 'update to %o', attr );
+paul.on( 'change:livesIn', function( model, attr ) {
+	console.log( 'change `livesIn` to %o', attr );
 });
-
 
 // Modifying either side of a bi-directional relation updates the other side automatically.
 // Take `paul` out or `ourHouse`; this triggers `remove:occupants` on `ourHouse`,
-// and `update:livesIn` on `paul`
+// and `change:livesIn` on `paul`
 ourHouse.get( 'occupants' ).remove( paul );
 
 alert( 'paul.livesIn=' + paul.get( 'livesIn' ) );
 </code></pre>
 <pre class="language-javascript nomargin"><code id="example-person-run3" class="language-javascript runnable" data-setup="#example-person-run2"><!--
--->// Move into `theirHouse`; triggers 'add:occupants' on ourHouse, and 'update:livesIn' on paul
+-->// Move into `theirHouse`; triggers 'add:occupants' on ourHouse, and 'change:livesIn' on paul
 theirHouse = new House( { id: 'house-2' } );
 paul.set( { 'livesIn': theirHouse } );
 
@@ -1074,6 +1069,10 @@ User = Backbone.RelationalModel.extend();
 			<li>
 				The <a href="#RelationalModel-findOrCreate"><q>findOrCreate</q></a> option <q>update</q> is renamed to <q>merge</q>,
 				since it's behavior corresponds with <q>merge</q> on <q>Collection.add</q> (and not with <q>update</q> on <q>Collection.reset</q>).
+			</li>
+			<li>
+				The <q>update:&lt;key&gt;</q> event has been removed, in favor of handling everything using "standard"
+				<q>change:&lt;key&gt;</q> events.
 			</li>
 		</ul>
 		
